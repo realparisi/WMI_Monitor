@@ -16,7 +16,7 @@ function New-EventSubscriberMonitor
 
 .LINK
 
-    {link to blog post when posted}
+    https://www.fireeye.com/blog/threat-research/2016/08/wmi_vs_wmi_monitor.html
 
 .INSTRUCTIONS
     1) Execute the script from an Administrative PowerShell console
@@ -135,7 +135,7 @@ function Remove-SubscriberMonitor
 
 .LINK
 
-    {link to blog post when posted}
+    https://www.fireeye.com/blog/threat-research/2016/08/wmi_vs_wmi_monitor.html
 #>
 
 	Get-WmiObject __eventFilter -namespace root/subscription -filter "name='_PersistenceEvent_'"| Remove-WmiObject
