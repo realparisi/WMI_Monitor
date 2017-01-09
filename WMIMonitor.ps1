@@ -27,17 +27,17 @@ function New-EventSubscriberMonitor
 #>
 	#ConsumerFilterArguments
 	$ConsumerFilterNamespace = 'root/subscription'
-    $ConsumerFilterClass = '__EventFilter' 
-    $ConsumerFilterArgs = @{
+   	$ConsumerFilterClass = '__EventFilter' 
+    	$ConsumerFilterArgs = @{
 		EventNamespace = 'root/subscription'
 		Name = '_PersistenceEvent_'
 		Query = 'SELECT * FROM __InstanceCreationEvent WITHIN 5 Where TargetInstance ISA "__EventConsumer"'
 		QueryLanguage = 'WQL'
 	}
 
-    #ProcessCallFilter Arguments
-    $ProcessCallFilterNamespace = 'root/subscription'
-    $ProcessCallFilterClass = '__EventFilter'
+    	#ProcessCallFilter Arguments
+    	$ProcessCallFilterNamespace = 'root/subscription'
+    	$ProcessCallFilterClass = '__EventFilter'
 	$ProcessCallFilterArgs = @{
 		EventNamespace = 'root/cimv2'
 		Name = '_ProcessCreationEvent_'
@@ -45,7 +45,7 @@ function New-EventSubscriberMonitor
 		QueryLanguage = 'WQL'
 	}
     
-    #Create Consumer and Process Call Filters
+   	 #Create Consumer and Process Call Filters
 	$ConsumerFilter = Set-WmiInstance -Class $ConsumerFilterClass -Namespace $ConsumerFilterNamespace -Arguments $ConsumerFilterArgs
 	$ProcessCallFilter = Set-WmiInstance -Class $ProcessCallFilterClass -Namespace $ProcessCallFilterNamespace -Arguments $ProcessCallFilterArgs
 
@@ -63,10 +63,10 @@ function New-EventSubscriberMonitor
 		'Command Executed: %InputParameters.CommandLine%'
 	)
 
-    #Define the ConsumerEvent Arguments
-    $ConsumerEventNamespace = 'root/subscription'
-    $ConsumerEventClass = 'NTEventLogEventConsumer'
-    $ConsumerEventArgs = @{
+    	#Define the ConsumerEvent Arguments
+    	$ConsumerEventNamespace = 'root/subscription'
+    	$ConsumerEventClass = 'NTEventLogEventConsumer'
+    	$ConsumerEventArgs = @{
 		Name = '_LogWMIConsumerEvent_'
 		Category = [UInt16] 0
 		EventType = [UInt32] 2 # Warning
@@ -76,9 +76,9 @@ function New-EventSubscriberMonitor
 		InsertionStringTemplates = [String[]] $ConsumerTemplate
 	}
 
-    #Define the ProcessCallEvent Arguments
-    $ProcessCallEventNamespace = 'root/subscription'
-    $ProcessCallEventClass = 'NTEventLogEventConsumer'
+    	#Define the ProcessCallEvent Arguments
+    	$ProcessCallEventNamespace = 'root/subscription'
+    	$ProcessCallEventClass = 'NTEventLogEventConsumer'
 	$ProcessCallEventArgs = @{
 		Name = [String] '_LogWMIProcessCreationEvent_'
 		Category = [UInt16] 0
@@ -89,21 +89,21 @@ function New-EventSubscriberMonitor
 		InsertionStringTemplates = [String[]] $ProcessCallTemplate
 	}
 
-    #Create the Event Consumers
+    	#Create the Event Consumers
 	$ConsumerConsumer = Set-WmiInstance -Class $ConsumerEventClass -Namespace $ConsumerEventNamespace -Arguments $ConsumerEventArgs
 	$ProcessCallConsumer = Set-WmiInstance -Class $ProcessCallEventClass -Namespace $ProcessCallEventNamespace -Arguments $ProcessCallEventArgs
 
-    #Define the Consumer Binding Arguments
+    	#Define the Consumer Binding Arguments
 	$ConsumerBindingNamespace = 'root/subscription'
-    $ConsumerBindingClass = '__FilterToConsumerBinding'
-    $ConsumerBindingArgs = @{
+    	$ConsumerBindingClass = '__FilterToConsumerBinding'
+    	$ConsumerBindingArgs = @{
 		Filter = $ConsumerFilter
 		Consumer = $ConsumerConsumer
 	}
 
-    #Define the ProcessCall Binding Arguments
-    $ProcessCallBindingNamespace = 'root/subscription'
-    $ProcessCallBindingClass = '__FilterToConsumerBinding'
+    	#Define the ProcessCall Binding Arguments
+    	$ProcessCallBindingNamespace = 'root/subscription'
+    	$ProcessCallBindingClass = '__FilterToConsumerBinding'
 	$ProcessCallBindingArgs = @{
 		Filter = $ProcessCallFilter
 		Consumer = $ProcessCallConsumer
