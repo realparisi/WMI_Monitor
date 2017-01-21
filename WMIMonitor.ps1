@@ -16,7 +16,7 @@ function New-EventSubscriberMonitor
 
 .LINK
 
-    {link to blog post when posted}
+    https://www.fireeye.com/blog/threat-research/2016/08/wmi_vs_wmi_monitor.html
 
 .INSTRUCTIONS
     1) Execute the script from an Administrative PowerShell console
@@ -25,110 +25,93 @@ function New-EventSubscriberMonitor
     3) Type Remove-SubscriberMonitor to remove the WMI subscriber created and discontinue logging the events
 
 #>
-	# Define the signatures - i.e. __EventFilter
-	$ConsumerFilterArgs = @{
+	#ConsumerFilterArguments
+	$ConsumerFilterNamespace = 'root/subscription'
+   	$ConsumerFilterClass = '__EventFilter' 
+    	$ConsumerFilterArgs = @{
 		EventNamespace = 'root/subscription'
 		Name = '_PersistenceEvent_'
 		Query = 'SELECT * FROM __InstanceCreationEvent WITHIN 5 Where TargetInstance ISA "__EventConsumer"'
 		QueryLanguage = 'WQL'
 	}
 
+    	#ProcessCallFilter Arguments
+    	$ProcessCallFilterNamespace = 'root/subscription'
+    	$ProcessCallFilterClass = '__EventFilter'
 	$ProcessCallFilterArgs = @{
 		EventNamespace = 'root/cimv2'
 		Name = '_ProcessCreationEvent_'
 		Query = 'SELECT * FROM MSFT_WmiProvider_ExecMethodAsyncEvent_Pre WHERE ObjectPath="Win32_Process" AND MethodName="Create"'
 		QueryLanguage = 'WQL'
 	}
-
-	$ConsumerInstanceArgs = @{
-		Namespace = 'root/subscription'
-		Class = '__EventFilter'
-		Arguments = $ConsumerFilterArgs
-	}
-
-	$ProcessCallInstanceArgs = @{
-		Namespace = 'root/subscription'
-		Class = '__EventFilter'
-		Arguments = $ProcessCallFilterArgs
-	}
-
-	$ConsumerFilter = Set-WmiInstance @ConsumerInstanceArgs
-	$ProcessCallFilter = Set-WmiInstance @ProcessCallInstanceArgs
+    
+   	 #Create Consumer and Process Call Filters
+	$ConsumerFilter = Set-WmiInstance -Class $ConsumerFilterClass -Namespace $ConsumerFilterNamespace -Arguments $ConsumerFilterArgs
+	$ProcessCallFilter = Set-WmiInstance -Class $ProcessCallFilterClass -Namespace $ProcessCallFilterNamespace -Arguments $ProcessCallFilterArgs
 
 	# Define the event log template and parameters
 	$ConsumerTemplate = @(
 		'==New WMI Consumer Created==',
-		'Consumer Name: %TargetInstance.Name%'
+		'Consumer Name: %TargetInstance.Name%',
 		'Command Executed: %TargetInstance.ExecutablePath%'
 	)
 
 	$ProcessCallTemplate = @(
 		'==WMI Command Executed==',
-		'Namespace: %Namespace%'
-		'Method Executed: %MethodName%'
+		'Namespace: %Namespace%',
+		'Method Executed: %MethodName%',
 		'Command Executed: %InputParameters.CommandLine%'
 	)
 
-	$NtEventLogArgsConsumer = @{
+    	#Define the ConsumerEvent Arguments
+    	$ConsumerEventNamespace = 'root/subscription'
+    	$ConsumerEventClass = 'NTEventLogEventConsumer'
+    	$ConsumerEventArgs = @{
 		Name = '_LogWMIConsumerEvent_'
 		Category = [UInt16] 0
 		EventType = [UInt32] 2 # Warning
 		EventID = [UInt32] 8
 		SourceName = 'WSH'
 		NumberOfInsertionStrings = [UInt32] $ConsumerTemplate.Length
-		InsertionStringTemplates = $ConsumerTemplate
+		InsertionStringTemplates = [String[]] $ConsumerTemplate
 	}
 
-	$NtEventLogArgsProcessCall = @{
-		Name = '_LogWMIProcessCreationEvent_'
+    	#Define the ProcessCallEvent Arguments
+    	$ProcessCallEventNamespace = 'root/subscription'
+    	$ProcessCallEventClass = 'NTEventLogEventConsumer'
+	$ProcessCallEventArgs = @{
+		Name = [String] '_LogWMIProcessCreationEvent_'
 		Category = [UInt16] 0
 		EventType = [UInt32] 2 # Warning
 		EventID = [UInt32] 8
-		SourceName = 'WSH'
+		SourceName = [String] 'WSH'
 		NumberOfInsertionStrings = [UInt32] $ProcessCallTemplate.Length
-		InsertionStringTemplates = $ProcessCallTemplate
+		InsertionStringTemplates = [String[]] $ProcessCallTemplate
 	}
 
-	$ConsumerInstanceArgs = @{
-		Namespace = 'root/subscription'
-		Class = 'NTEventLogEventConsumer'
-		Arguments = $NtEventLogArgsConsumer
-	}
+    	#Create the Event Consumers
+	$ConsumerConsumer = Set-WmiInstance -Class $ConsumerEventClass -Namespace $ConsumerEventNamespace -Arguments $ConsumerEventArgs
+	$ProcessCallConsumer = Set-WmiInstance -Class $ProcessCallEventClass -Namespace $ProcessCallEventNamespace -Arguments $ProcessCallEventArgs
 
-	$ProcessCallInstanceArgs = @{
-		Namespace = 'root/subscription'
-		Class = 'NTEventLogEventConsumer'
-		Arguments = $NtEventLogArgsProcessCall
-	}
-
-	$ConsumerConsumer = Set-WmiInstance @ConsumerInstanceArgs
-	$ProcessCallConsumer = Set-WmiInstance @ProcessCallInstanceArgs
-
-	$ConsumerBindingArgs = @{
+    	#Define the Consumer Binding Arguments
+	$ConsumerBindingNamespace = 'root/subscription'
+    	$ConsumerBindingClass = '__FilterToConsumerBinding'
+    	$ConsumerBindingArgs = @{
 		Filter = $ConsumerFilter
 		Consumer = $ConsumerConsumer
 	}
 
+    	#Define the ProcessCall Binding Arguments
+    	$ProcessCallBindingNamespace = 'root/subscription'
+    	$ProcessCallBindingClass = '__FilterToConsumerBinding'
 	$ProcessCallBindingArgs = @{
 		Filter = $ProcessCallFilter
 		Consumer = $ProcessCallConsumer
 	}
 
-	$ConsumerInstanceArgs = @{
-		Namespace = 'root/subscription'
-		Class = '__FilterToConsumerBinding'
-		Arguments = $ConsumerBindingArgs
-	}
-
-	$ProcessCallInstanceArgs = @{
-		Namespace = 'root/subscription'
-		Class = '__FilterToConsumerBinding'
-		Arguments = $ProcessCallBindingArgs
-	}
-
-	# Register the alerts
-	$ConsumerBinding = Set-WmiInstance @ConsumerInstanceArgs
-	$ProcessCallBinding = Set-WmiInstance @ProcessCallInstanceArgs
+	# Register the bindings
+	$ConsumerBinding = Set-WmiInstance -Class $ConsumerBindingClass -Namespace $ConsumerBindingNamespace -Arguments $ConsumerBindingArgs
+	$ProcessCallBinding = Set-WmiInstance -Class $ProcessCallBindingClass -Namespace $ProcessCallBindingNamespace -Arguments $ProcessCallBindingArgs
 	
 	Write-Output 'The new event subscriber has been successfully created!'
 	Write-Output 'Check the Application Event Log for Event ID 8 and source of "WSH"'
@@ -152,17 +135,17 @@ function Remove-SubscriberMonitor
 
 .LINK
 
-    {link to blog post when posted}
+    https://www.fireeye.com/blog/threat-research/2016/08/wmi_vs_wmi_monitor.html
 #>
 
-	Get-WmiObject __eventFilter -namespace root\subscription -filter "name='_PersistenceEvent_'"| Remove-WmiObject
-	Get-WmiObject __eventFilter -namespace root\subscription -filter "name='_ProcessCreationEvent_'"| Remove-WmiObject
+	Get-WmiObject __eventFilter -namespace root/subscription -filter "name='_PersistenceEvent_'"| Remove-WmiObject
+	Get-WmiObject __eventFilter -namespace root/subscription -filter "name='_ProcessCreationEvent_'"| Remove-WmiObject
 	
-	Remove-WmiObject -Path "ROOT\subscription:NTEventLogEventConsumer.Name='_LogWMIConsumerEvent_'"
-	Remove-WmiObject -Path "ROOT\subscription:NTEventLogEventConsumer.Name='_LogWMIProcessCreationEvent_'"
+	Remove-WmiObject -Path "ROOT/subscription:NTEventLogEventConsumer.Name='_LogWMIConsumerEvent_'"
+	Remove-WmiObject -Path "ROOT/subscription:NTEventLogEventConsumer.Name='_LogWMIProcessCreationEvent_'"
 	
-	Get-WmiObject __FilterToConsumerBinding -Namespace root\subscription | Where-Object { $_.filter -match '_ProcessCreationEvent_'} | Remove-WmiObject
-	Get-WmiObject __FilterToConsumerBinding -Namespace root\subscription | Where-Object { $_.filter -match '_PersistenceEvent_'} | Remove-WmiObject
+	Get-WmiObject __FilterToConsumerBinding -Namespace root/subscription | Where-Object { $_.filter -match '_ProcessCreationEvent_'} | Remove-WmiObject
+	Get-WmiObject __FilterToConsumerBinding -Namespace root/subscription | Where-Object { $_.filter -match '_PersistenceEvent_'} | Remove-WmiObject
 	
-	Write-Output 'The event subsriber and all associating WMI objects have been successfully removed.'
+	Write-Output 'The event subscriber and all associating WMI objects have been successfully removed.'
 }
