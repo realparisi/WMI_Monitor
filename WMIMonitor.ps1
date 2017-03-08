@@ -19,10 +19,11 @@ function New-EventSubscriberMonitor
     https://www.fireeye.com/blog/threat-research/2016/08/wmi_vs_wmi_monitor.html
 
 .INSTRUCTIONS
-    1) Execute the script from an Administrative PowerShell console
-    The functions "New-EventSubscriberMonitor" and "Remove-SubscriberMonitor" will no be loaded into your system's PowerShell instance.
-    2) Type New-EventSubscriberMonitor to invoke the function and start recording WMI process creations and Consumers
-    3) Type Remove-SubscriberMonitor to remove the WMI subscriber created and discontinue logging the events
+    1) Execute the script from an Administrative PowerShell console "Import-Module ./WMIMonitor.ps1"
+    The functions "New-EventSubscriberMonitor" and "Remove-SubscriberMonitor" will now be loaded into your system's PowerShell instance
+    2) Type "New-EventSubscriberMonitor" to invoke the function and start recording WMI process creations and Consumers
+    3) Type "Remove-SubscriberMonitor" to remove the WMI subscriber created and discontinue logging the events
+    4) In a new PowerShell window, test a process call create function "wmic process call create "notepad.exe"" and check the Application Event Log to ensure the script is logging
 
 #>
 	#ConsumerFilterArguments
