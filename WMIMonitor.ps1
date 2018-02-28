@@ -148,5 +148,5 @@ function Remove-SubscriberMonitor
 	Get-WmiObject __FilterToConsumerBinding -Namespace root/subscription | Where-Object { $_.filter -match '_ProcessCreationEvent_'} | Remove-WmiObject
 	Get-WmiObject __FilterToConsumerBinding -Namespace root/subscription | Where-Object { $_.filter -match '_PersistenceEvent_'} | Remove-WmiObject
 	
-	Write-Output 'The event subscriber and all associating WMI objects have been successfully removed.'
+	Write-Output 'The event subscriber and all associated WMI objects have been successfully removed.'
 }
