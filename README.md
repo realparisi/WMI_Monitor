@@ -20,5 +20,5 @@ The script requires PowerShell version 3 or above and will run in its current st
 
   a) Remove-SubscriberMonitor
         
-        You should see a message "The event subscriber and all associating WMI objects have been successfully removed."
+        You should see a message "The event subscriber and all associated WMI objects have been successfully removed."
 
